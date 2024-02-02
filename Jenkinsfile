@@ -1,9 +1,9 @@
 pipeline{
     agent any
-    tools{
-        jdk 'jdk17'
-        nodejs 'node16'
-    }
+    // tools{
+    //     jdk 'jdk17'
+    //     nodejs 'node16'
+    // }
     environment {
         SCANNER_HOME=tool 'sonar-scanner'
     }
@@ -15,14 +15,14 @@ pipeline{
         }
         stage('Checkout from Git'){
             steps{
-                git branch: 'master', url: 'https://github.com/rameshkumarvermagithub/flask-calculator.git'
+                git branch: 'master', url: 'https://github.com/rameshkumarvermagithub/gitops-demo.git'
             }
         }
         stage("Sonarqube Analysis "){
             steps{
                 withSonarQubeEnv('sonar-server') {
-                    sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=flask-calculator \
-                    -Dsonar.projectKey=flask-calculator'''
+                    sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=flask-app \
+                    -Dsonar.projectKey=flask-app'''
                 }
             }
         }
@@ -53,23 +53,23 @@ pipeline{
             steps{
                 script{
                    withDockerRegistry(credentialsId: 'docker', toolName: 'docker'){
-                       sh "docker build -t flask-calculator ."
-                       sh "docker tag flask-calculator rameshkumarverma/flask-calculator:latest"
-                       sh "docker push rameshkumarverma/flask-calculator:latest"
+                       sh "docker build -t rameshkumarverma/flask-app ."
+                       // sh "docker tag flask-app rameshkumarverma/flask-app:latest"
+                       sh "docker push rameshkumarverma/flask-app:latest"
                     }
                 }
             }
         }
         stage("TRIVY"){
             steps{
-                sh "trivy image rameshkumarverma/flask-calculator:latest > trivyimage.txt"
+                sh "trivy image rameshkumarverma/flask-app:latest > trivyimage.txt"
             }
         }
         // stage("deploy_docker"){
         //     steps{
-        //         sh "docker stop flask-calculator || true"  // Stop the container if it's running, ignore errors
-        //         sh "docker rm flask-calculator || true" 
-        //         sh "docker run -d --name flask-calculator -p 3000:3000 gajananbarure/gajananb-mycalci-app"
+        //         sh "docker stop flask-app || true"  // Stop the container if it's running, ignore errors
+        //         sh "docker rm flask-app || true" 
+        //         sh "docker run -d --name flask-app -p 3000:3000 rameshkumarverma/flask-app"
         //     }
         // }
       stage('Deploy to Kubernetes') {
@@ -79,7 +79,7 @@ pipeline{
                         withKubeConfig(caCertificate: '', clusterName: '', contextName: '', credentialsId: 'k8s', namespace: '', restrictKubeConfigAccess: false, serverUrl: '') {
                             // Apply deployment and service YAML files
                             sh 'kubectl apply -f deployment.yml'
-                            sh 'kubectl apply -f service.yml'
+                            // sh 'kubectl apply -f service.yml'
 
                             // Get the external IP or hostname of the service
                             // def externalIP = sh(script: 'kubectl get svc amazon-service -o jsonpath="{.status.loadBalancer.ingress[0].hostname}"', returnStdout: true).trim()
